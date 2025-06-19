@@ -13,6 +13,8 @@ public class parseArguments {
         double crossRate =0;
         int numberOfElites= 0;
         int LSRate =0;
+        boolean LSStart = true;
+        double LSStartRate = 0.0;
 //        String arg = "--popSize 300 --mutRate 0.05 --mutMethod S --crossRate 1.0 --crossMethod BS --selection RW --elitism 0.1 --numberOfElites 5 --LSRate 10 --TSRate 4 --instance src/main/java/org/example/Data/instance/200_1.json";
         for (int i = 0; i < args.length; i++) {
             switch (args[i]) {
@@ -46,11 +48,17 @@ public class parseArguments {
                 case "--LSRate":
                     LSRate = Integer.parseInt(args[++i]);
                     break;
+                case "--LSStart":
+                    LSStart = Boolean.parseBoolean(args[++i]);
+                    break;
+                case "--LSStartRate":
+                    LSStartRate = Double.parseDouble(args[++i]);
+                    break;
                 case "--TSRate":
                     TSRate = Integer.parseInt(args[++i]);
                     break;
             }
         }
-        return new Configuration(instance,populationSize,selectionMethod,elitismRate,TSRate,mutationMethod,mutRate,crossoverMethod,crossRate,numberOfElites,LSRate);
+        return new Configuration(instance,populationSize,selectionMethod,elitismRate,TSRate,mutationMethod,mutRate,crossoverMethod,crossRate,numberOfElites,LSRate,LSStart,LSStartRate);
     }
 }

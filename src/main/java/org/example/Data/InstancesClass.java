@@ -36,6 +36,7 @@ public class InstancesClass {
         initializePatientServiceCaregiver();
         initializeAllPossibleCaregiverCombinations();
     }
+
     private void initializePatientServiceCaregiver() {
         for( Patient p : patients){
             p.setPossibleFirstCaregiver(getQualifiedCaregiver(p.getRequired_caregivers()[0].getService()));

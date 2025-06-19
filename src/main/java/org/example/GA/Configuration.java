@@ -12,8 +12,10 @@ public class Configuration {
     private final double crossoverRate;
     private final int numberOfElites;
     private final int LSRate;
+    private final boolean LSStart;
+    private final double LSStartRate;
 
-    public Configuration(String instance, int populationSize, String selectionMethod, double elitismRate, int TSRate, String mutationMethod, double mutationRate, String crossoverMethod, double crossoverRate, int numberOfElites, int LSRate) {
+    public Configuration(String instance, int populationSize, String selectionMethod, double elitismRate, int TSRate, String mutationMethod, double mutationRate, String crossoverMethod, double crossoverRate, int numberOfElites, int LSRate, boolean LSStart, double LSStartRate) {
         this.instance = instance;
         this.populationSize = populationSize;
         this.selectionMethod = selectionMethod;
@@ -25,6 +27,8 @@ public class Configuration {
         this.crossoverRate = crossoverRate;
         this.numberOfElites = numberOfElites;
         this.LSRate = LSRate;
+        this.LSStart = LSStart;
+        this.LSStartRate = LSStartRate;
     }
     public String getInstance() {
         return instance;
@@ -68,5 +72,13 @@ public class Configuration {
 
     public int getLSRate() {
         return LSRate;
+    }
+
+    public boolean isLSStart() {
+        return LSStart;
+    }
+
+    public double getLSStartRate() {
+        return LSStartRate;
     }
 }

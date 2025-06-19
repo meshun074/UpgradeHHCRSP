@@ -80,7 +80,6 @@ public class Patient {
         return time_window;
     }
 
-
     public Required_Caregiver[] getRequired_caregivers() {
         return required_caregivers;
     }
@@ -88,6 +87,5 @@ public class Patient {
     public Synchronization getSynchronization() {
         return synchronization;
     }
-
 
 }

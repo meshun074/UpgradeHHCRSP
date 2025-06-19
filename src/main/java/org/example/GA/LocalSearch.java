@@ -2,76 +2,98 @@ package org.example.GA;
 
 import org.example.Data.InstancesClass;
 import org.example.Data.Patient;
-import org.example.Data.Required_Caregiver;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.example.GA.EvaluationFunction.*;
-import static org.example.GA.EvaluationFunction.UpdateCost;
 import static org.example.GA.GeneticAlgorithm.conflictCheck;
 
-public class BestCostRouteCrossover implements Runnable {
+public class LocalSearch implements Runnable {
     @Override
     public void run() {
-        ga.getCrossoverChromosomes().add(Crossover());
+        ga.getLSChromosomes().put(r, search());
     }
 
-    private final GeneticAlgorithm ga;
+    private GeneticAlgorithm ga;
+    private Chromosome ch;
+    private final Random rand;
     private final int r;
-    private final Chromosome p1, p2;
+    private final int gen;
     private static Patient[] allPatients;
     private static int allCaregivers;
     private static double[][] distances;
-    private final Random rand;
 
-    public BestCostRouteCrossover(GeneticAlgorithm ga, int r, Chromosome p1, Chromosome p2) {
+    public LocalSearch(GeneticAlgorithm ga, Chromosome ch, int r, int gen ) {
         this.ga = ga;
+        this.ch = ch;
+        this.rand = ThreadLocalRandom.current();
         this.r = r;
-        this.p1 = p1;
-        this.p2 = p2;
-        rand = ThreadLocalRandom.current();
+        this.gen = gen;
+    }
+    public static void initialize(InstancesClass data) {
+        allPatients = data.getPatients();
+        distances = data.getDistances();
+        allCaregivers = data.getCaregivers().length;
     }
 
-    public static void initialize(InstancesClass instance) {
-        allPatients = instance.getPatients();
-        distances = instance.getDistances();
-        allCaregivers = instance.getCaregivers().length;
+    public Chromosome search() {
+        Chromosome best = ch;
+        boolean continueLS;
+        boolean genCont = gen >= 100;
+        int counter = 0;
+        Random rand = new Random();
+        do {
+            continueLS = false;
+            ch = localSearch(ch);
+            if (ch.getFitness() < best.getFitness()|| ch.getFitness() == best.getFitness()&&rand.nextBoolean()) {
+                best = ch;
+                continueLS = true;
+            } else {
+                if (genCont && counter < 6) {
+                    continueLS = true;
+                }
+            }
+            counter++;
+        } while (continueLS);
+        return best;
     }
-
-    public Chromosome Crossover() {
-        // Initialize variables
-        Set<Integer> selectRoute = new HashSet<>(p2.getGenes()[r]);
-        List<Integer>[] p1Routes = p1.getGenes();
-        List<Integer>[] c1Routes = new ArrayList[p1Routes.length];
-
-        //Remove patients of selected route from parents
+    private Chromosome localSearch(Chromosome ch) {
+        List<Integer>[] p1Routes, c1Routes;
+        int patientLength = allPatients.length;
+        int size = (int) (patientLength * 0.2);
+        Set<Integer> selectRoute = new LinkedHashSet<>(size);
+        Random rand = new Random();
+        while (selectRoute.size() < size) {
+            int sp = rand.nextInt(patientLength);
+            selectRoute.add(sp);
+        }
+        p1Routes = ch.getGenes();
+        c1Routes = new ArrayList[p1Routes.length];
+        //Removing patients of selected route from parent routes
         for (int i = 0; i < p1Routes.length; i++) {
-            List<Integer> route = new ArrayList<>(p1Routes[i].size());
+            List<Integer> route1 = new ArrayList<>(p1Routes[i].size());
             for (int j = 0; j < p1Routes[i].size(); j++) {
                 int patient = p1Routes[i].get(j);
                 if (!selectRoute.contains(patient)) {
-                    route.add(patient);
+                    route1.add(patient);
                 }
             }
-            c1Routes[i] = route;
+            c1Routes[i] = route1;
         }
-        List<Integer> route = new ArrayList<>(selectRoute);
-        Collections.shuffle(route);
+        //Inserting removed route
+        List<Integer> route2 = new ArrayList<>(selectRoute);
         Chromosome cTemp = new Chromosome(c1Routes, 0.0, true);
         EvaluationFunction.Evaluate(cTemp);
-//        System.out.println("in parent "+p1);
-//        System.out.println("in cTemp "+cTemp+" route "+route);
-        for (int i = 0; i < route.size(); i++) {
-            int patient = route.get(i);
-//            System.out.println("patient " + patient);
-            Patient p = allPatients[patient];
+        boolean isInvalid;
+        for (int i = 0; i < route2.size(); i++) {
+            isInvalid = cTemp.getFitness() == Double.POSITIVE_INFINITY;
             Chromosome bestChromosome = null;
+            int patient = route2.get(i);
+            Patient p = allPatients[patient];
             cTemp.buildPatientRouteMap();
-            Required_Caregiver[] requiredCaregivers = p.getRequired_caregivers();
-            boolean isInvalid = cTemp.getFitness() == Double.POSITIVE_INFINITY;
-            List<CaregiverPair> caregiverPairs = p.getAllPossibleCaregiverCombinations();
-            if (requiredCaregivers.length > 1) {
+            if (p.getRequired_caregivers().length > 1) {
+                List<CaregiverPair> caregiverPairs = p.getAllPossibleCaregiverCombinations();
                 for (int x = 0; x < caregiverPairs.size(); x++) {
                     CaregiverPair caregiverPair = caregiverPairs.get(x);
                     int first = caregiverPair.getFirst();
@@ -81,30 +103,31 @@ public class BestCostRouteCrossover implements Runnable {
                             if (noEvaluationConflicts(c1Routes[first], c1Routes[second], m, n)) {
                                 c1Routes[first].add(m, patient);
                                 c1Routes[second].add(n, patient);
-                                Chromosome temp = isInvalid ? new Chromosome(c1Routes, 0.0, true) : new Chromosome(c1Routes, true);
+                                Chromosome temp = isInvalid?new Chromosome(c1Routes, 0.0,true): new Chromosome(c1Routes, true);
                                 temp.setFirst(first);
                                 temp.setFirstPosition(m);
                                 temp.setSecond(second);
                                 temp.setSecondPosition(n);
-                                bestChromosome = evaluateMove(temp, bestChromosome, cTemp, isInvalid);
+                                bestChromosome = evaluateMove(temp,bestChromosome,cTemp,isInvalid);
                                 c1Routes[first].remove(Integer.valueOf(patient));
                                 c1Routes[second].remove(Integer.valueOf(patient));
                             }
                         }
                     }
                 }
+
                 if (bestChromosome != null) {
-                    List<Integer>[] routes = bestChromosome.getGenes();
+                    isInvalid = bestChromosome.getFitness() == Double.POSITIVE_INFINITY;
+                    bestChromosome = swap(bestChromosome, isInvalid, patient);
                     int first = bestChromosome.getFirst();
                     int second = bestChromosome.getSecond();
+                    List<Integer>[] routes = bestChromosome.getGenes();
                     c1Routes[first] = new ArrayList<>(routes[first]);
                     c1Routes[second] = new ArrayList<>(routes[second]);
                     cTemp = bestChromosome;
                 }
-                else {
-                    System.out.println("no route found");
-                }
             } else {
+                List<CaregiverPair> caregiverPairs = p.getAllPossibleCaregiverCombinations();
                 for (int x = 0; x < caregiverPairs.size(); x++) {
                     CaregiverPair caregiverPair = caregiverPairs.get(x);
                     int first = caregiverPair.getFirst();
@@ -117,24 +140,17 @@ public class BestCostRouteCrossover implements Runnable {
                         c1Routes[first].remove(Integer.valueOf(patient));
                     }
                 }
+
                 if (bestChromosome != null) {
+                    isInvalid = bestChromosome.getFitness() == Double.POSITIVE_INFINITY;
+                    bestChromosome = swap(bestChromosome, isInvalid, patient);
                     int first = bestChromosome.getFirst();
-                    List<Integer> routes = bestChromosome.getGenes()[first];
-                    c1Routes[first] = new ArrayList<>(routes);
+                    List<Integer> route = bestChromosome.getGenes()[first];
+                    c1Routes[first] = new ArrayList<>(route);
                     cTemp = bestChromosome;
                 }
-                else {
-                    System.out.println("no route found "+caregiverPairs.size());
-                }
-//                for (List<Integer> c: c1Routes){
-//                    System.out.print(c+ " ");
-//                }
-//                System.out.println();
-//                System.out.println("cTemp "+cTemp);
             }
         }
-//        System.out.println("out cTemp "+cTemp);
-        if(Math.round(cTemp.getFitness()) ==Math.round(157.33566666666667)) {System.exit(1);}
         return cTemp;
     }
 
@@ -184,13 +200,14 @@ public class BestCostRouteCrossover implements Runnable {
 
                 route.subList(index, route.size()).clear();
                 index++;
-                //System.out.println(base.getFitness());
                 travelCost.subList(index, travelCost.size()).clear();
                 currentTime.subList(index, currentTime.size()).clear();
                 tardiness.subList(index, tardiness.size()).clear();
                 maxTardiness.subList(index, maxTardiness.size()).clear();
+                tempShifts[i] = new Shift(shifts[i].getCaregiver(), route, currentTime, travelCost, tardiness, maxTardiness);
+            } else {
+                tempShifts[i] = new Shift(shifts[i].getCaregiver(), route, currentTime, travelCost, tardiness, maxTardiness);
             }
-            tempShifts[i] = new Shift(shifts[i].getCaregiver(), route, currentTime, travelCost, tardiness, maxTardiness);
         }
         double totalTravelCost = 0;
         double totalTardiness = 0;
@@ -218,7 +235,97 @@ public class BestCostRouteCrossover implements Runnable {
         }
         return bestChromosome;
     }
+    private Chromosome swap(Chromosome ch, boolean isInvalid, int patient) {
+        ch.buildPatientRouteMap();
+        Chromosome bestChromosome = ch;
+        List<Integer>[] routes = ch.getGenes();
+        if (ch.getSecond() != -1) {
+            int first = ch.getFirst();
+            int second = ch.getSecond();
+            int firstPosition = ch.getFirstPosition();
+            int secondPosition = ch.getSecondPosition();
+            List<Integer> route1 = routes[first];
+            List<Integer> route2 = routes[second];
+            for (int z = 0; z < route1.size(); z++) {
+                if (Math.abs(z - firstPosition) > 1) {
+                    int p3 = route1.get(z);
+                    route1.set(firstPosition, p3);
+                    route1.set(z, patient);
+                    int newFirstPosition = Math.min(firstPosition,z);
+                    Chromosome temp = isInvalid? new Chromosome(routes,0.0, true): new Chromosome(routes, true);
+                    temp.setFirst(first);
+                    temp.setFirstPosition(newFirstPosition);
+                    temp.setSecond(second);
+                    temp.setSecondPosition(secondPosition);
+                    bestChromosome = evaluateMove(temp,bestChromosome,ch,isInvalid);
+                    route1.set(firstPosition, patient);
+                    route1.set(z, p3);
+                }
+            }
 
+            for (int l = 0; l < route2.size(); l++) {
+                if (Math.abs(l - secondPosition) > 1) {
+                    int p4 = route2.get(l);
+                    route2.set(secondPosition, p4);
+                    route2.set(l, patient);
+                    int newSecondPosition = Math.min(secondPosition,l);
+                    Chromosome temp = isInvalid? new Chromosome(routes,0.0, true): new Chromosome(routes, true);
+                    temp.setFirst(first);
+                    temp.setFirstPosition(firstPosition);
+                    temp.setSecond(second);
+                    temp.setSecondPosition(newSecondPosition);
+                    bestChromosome = evaluateMove(temp,bestChromosome,ch,isInvalid);
+                    route2.set(secondPosition, patient);
+                    route2.set(l, p4);
+                }
+            }
+            for (int z = 0; z < route1.size(); z++) {
+                if (Math.abs(z - firstPosition) > 1) {
+                    for (int l = 0; l < route2.size(); l++) {
+                        if (Math.abs(l - secondPosition) > 1) {
+                            int p3 = route1.get(z);
+                            int p4 = route2.get(l);
+                            route1.set(firstPosition, p3);
+                            route1.set(z, patient);
+                            route2.set(secondPosition, p4);
+                            route2.set(l, patient);
+                            int newFirstPosition = Math.min(firstPosition,z);
+                            int newSecondPosition = Math.min(secondPosition,l);
+                            Chromosome temp = isInvalid? new Chromosome(routes,0.0,true): new Chromosome(routes, true);
+                            temp.setFirst(first);
+                            temp.setFirstPosition(newFirstPosition);
+                            temp.setSecond(second);
+                            temp.setSecondPosition(newSecondPosition);
+                            bestChromosome = evaluateMove(temp,bestChromosome,ch,isInvalid);
+                            route1.set(firstPosition, patient);
+                            route1.set(z, p3);
+                            route2.set(secondPosition, patient);
+                            route2.set(l, p4);
+                        }
+                    }
+                }
+            }
+        } else {
+            int first = ch.getFirst();
+            int firstPosition = ch.getFirstPosition();
+            List<Integer> route1 = routes[first];
+            for (int i = 0; i < route1.size(); i++) {
+                if (Math.abs(i - firstPosition) > 1) {
+                    int p2 = route1.get(i);
+                    route1.set(firstPosition, p2);
+                    route1.set(i, patient);
+                    int newFirstPosition = Math.min(firstPosition,i);
+                    Chromosome temp = isInvalid? new Chromosome(routes,0.0,true): new Chromosome(routes, true);
+                    temp.setFirst(first);
+                    temp.setFirstPosition(newFirstPosition);
+                    bestChromosome = evaluateMove(temp,bestChromosome,ch,isInvalid);
+                    route1.set(firstPosition, patient);
+                    route1.set(i, p2);
+                }
+            }
+        }
+        return bestChromosome;
+    }
     private void evaluate(Chromosome temp, int[] routeEndPoint, Chromosome bestChromosome) {
         Shift[] shifts = temp.getCaregiversRouteUp();
         Set<Integer> track = new HashSet<>(100);
@@ -252,9 +359,6 @@ public class BestCostRouteCrossover implements Runnable {
         }
         UpdateCost(temp);
     }
-
-
-
     private boolean noEvaluationConflicts(List<Integer> c1Route, List<Integer> c2Route, int m, int n) {
         return conflictCheck(c1Route, c2Route, m, n);
     }
