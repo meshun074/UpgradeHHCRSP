@@ -29,10 +29,10 @@ public class Population {
         List<Chromosome> population = new ArrayList<>(popSize);
         for (RouteInitializer ri : tempPopulation) {
             Chromosome ch = new Chromosome(ri.getCaregiversRoute(),ri.getSolutionCost(),false, ri.getCaregiversShift());
+            ch.setTotalTravelCost(ri.getTotalTravelCost());
+            ch.setTotalTardiness(ri.getTotalTardiness());
+            ch.setHighestTardiness(ri.getHighestTardiness());
             population.add(ch);
-            population.getLast().setTotalTravelCost(ri.getTotalTravelCost());
-            population.getLast().setTotalTardiness(ri.getTotalTardiness());
-            population.getLast().setHighestTardiness(ri.getHighestTardiness());
         }
         return population;
     }

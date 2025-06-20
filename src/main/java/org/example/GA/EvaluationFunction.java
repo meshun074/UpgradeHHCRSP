@@ -279,7 +279,9 @@ public class EvaluationFunction {
 
 
     static void UpdateCost(Chromosome ch) {
-        ch.setFitness((1 / 3d * ch.getTotalTravelCost()) + (1 / 3d * ch.getTotalTardiness()) + (1 / 3d * ch.getHighestTardiness()));
+        double cost = (1 / 3d * ch.getTotalTravelCost()) + (1 / 3d * ch.getTotalTardiness()) + (1 / 3d * ch.getHighestTardiness());
+        cost = Math.round(cost * 1000.0) / 1000.0;
+        ch.setFitness(cost);
     }
 
     private static int findSecondCaregiver(int pIndex, int route1, Shift[] routes, Chromosome ch, Set<Integer> track) {
