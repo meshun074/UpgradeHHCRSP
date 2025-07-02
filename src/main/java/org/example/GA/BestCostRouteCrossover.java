@@ -19,15 +19,17 @@ public class BestCostRouteCrossover implements Runnable {
 
     private final GeneticAlgorithm ga;
     private final int r;
+    private final int index;
     private final Chromosome p1, p2;
     private static Patient[] allPatients;
     private static int allCaregivers;
     private static double[][] distances;
     private final Random rand;
 
-    public BestCostRouteCrossover(GeneticAlgorithm ga, int r, Chromosome p1, Chromosome p2) {
+    public BestCostRouteCrossover(GeneticAlgorithm ga, int r, Chromosome p1, Chromosome p2, int index) {
         this.ga = ga;
         this.r = r;
+        this.index = index;
         this.p1 = p1;
         this.p2 = p2;
         rand = ThreadLocalRandom.current();
@@ -135,6 +137,7 @@ public class BestCostRouteCrossover implements Runnable {
         }
 //        System.out.println("out cTemp "+cTemp);
         if(Math.round(cTemp.getFitness()) ==Math.round(157.33566666666667)) {System.exit(1);}
+        cTemp.setCrossIndex(index);
         return cTemp;
     }
 

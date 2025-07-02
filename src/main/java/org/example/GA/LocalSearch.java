@@ -61,10 +61,10 @@ public class LocalSearch implements Runnable {
     private Chromosome localSearch(Chromosome ch) {
         List<Integer>[] p1Routes, c1Routes;
         int patientLength = allPatients.length;
-        int size = (int) (patientLength * 0.4);
+        int size = (int) (patientLength * (0.4+0.1*Math.random()));
         Set<Integer> selectRoute = new LinkedHashSet<>(size);
         Random rand = new Random();
-        for (int i =0; i < size; i++) {
+        while (selectRoute.size() < size) {
             int sp = rand.nextInt(patientLength);
             selectRoute.add(sp);
         }

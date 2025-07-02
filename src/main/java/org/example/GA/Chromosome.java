@@ -8,6 +8,7 @@ import java.util.*;
 public class Chromosome {
     private List<Integer>[] genes;
     private int caregivers;
+    private int crossIndex = -1;
     private int first=-1;
     private int second=-1;
     private int firstPosition =-1;
@@ -77,6 +78,14 @@ public class Chromosome {
         this.highestTardiness = 0;
     }
 
+    public int getCrossIndex() {
+        return crossIndex;
+    }
+
+    public void setCrossIndex(int crossIndex) {
+        this.crossIndex = crossIndex;
+    }
+
     public int getFirst() {
         return first;
     }
@@ -112,7 +121,6 @@ public class Chromosome {
     public int getCaregivers() {
         return caregivers;
     }
-
     // Call this once when `genes` is initialized or updated
     public void buildPatientRouteMap() {
         patientToRoutesMap.clear();
@@ -124,6 +132,7 @@ public class Chromosome {
             }
         }
     }
+
     public  Map<Integer, Set<Integer>> getPatientToRoutesMap(){
         return patientToRoutesMap;
     }

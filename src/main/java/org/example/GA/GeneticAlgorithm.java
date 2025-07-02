@@ -170,12 +170,12 @@ public class GeneticAlgorithm {
                 r2=rand.nextInt(caregiversNum);
             }while (genes1[r1].isEmpty()||genes2[r2].isEmpty());
             int finalR2 = r2;
-            BestCostRouteCrossover bs = new BestCostRouteCrossover(this, finalR2,p1,p2);
+            BestCostRouteCrossover bs = new BestCostRouteCrossover(this, finalR2,p1,p2,index);
             tempPopulation.add(bs.Crossover());
             index++;
             int finalR1 = r1;
             if (index < crossSize){
-               bs = new BestCostRouteCrossover(this, finalR1,p2,p1);
+               bs = new BestCostRouteCrossover(this, finalR1,p2,p1,index);
                 tempPopulation.add(bs.Crossover());
                 index++;
             }
@@ -183,6 +183,7 @@ public class GeneticAlgorithm {
 //        sortPopulation(tempPopulation);
 //        System.out.println(tempPopulation.getFirst().getFitness()+" "+tempPopulation.getFirst());
     }
+
     private void bestCostRouteCrossover() {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
         crossoverChromosomes.clear();
@@ -202,28 +203,37 @@ public class GeneticAlgorithm {
                 r2=rand.nextInt(caregiversNum);
             }while (genes1[r1].isEmpty()||genes2[r2].isEmpty());
             int finalR2 = r2;
+            int finalIndex =index;
             crossoverTasks.add(()->{
-                new BestCostRouteCrossover(this, finalR2,p1,p2).run();
+                new BestCostRouteCrossover(this, finalR2,p1,p2,finalIndex).run();
+                return null;
+            });
+            int finalR1 = r1;
+            int finalIndex1 =index;
+            crossoverTasks.add(() -> {
+                new BestCostRouteCrossover(this, finalR1, p2, p1,finalIndex1).run();
                 return null;
             });
             index++;
-            int finalR1 = r1;
-            if (index < crossSize){
-                crossoverTasks.add(()->{
-                    new BestCostRouteCrossover(this, finalR1,p2,p1).run();
-                    return null;
-                });
-                index++;
-            }
         }
-        invokeThreads(executor,crossoverTasks);
+        invokeThreadsBC(executor,crossoverTasks);
     }
-    private void invokeThreads(ExecutorService service, List<Callable<Void>> crossoverTasks) {
+    private void invokeThreadsBC(ExecutorService service, List<Callable<Void>> crossoverTasks) {
         try {
             service.invokeAll(crossoverTasks);
             List<Chromosome> xChromosomes = crossoverChromosomes;
             synchronized (xChromosomes){
-                tempPopulation.addAll(xChromosomes);
+                sortByCrossIndex(xChromosomes);
+                for(int i=0; i<xChromosomes.size(); i+=2){
+                    int next = i+1;
+                    Chromosome best = xChromosomes.get(i);
+                    Chromosome nextBest = xChromosomes.get(next);
+                    if(best.getFitness() < nextBest.getFitness()||best.getFitness()==nextBest.getFitness()&&rand.nextBoolean()){
+                        tempPopulation.add(best);
+                    }else {
+                        tempPopulation.add(nextBest);
+                    }
+                }
             }
         }catch (InterruptedException e){
             Thread.currentThread().interrupt();
@@ -232,6 +242,9 @@ public class GeneticAlgorithm {
         }
     }
 
+    private void sortByCrossIndex(List<Chromosome> chromosomes) {
+        chromosomes.sort(Comparator.comparing(Chromosome::getCrossIndex));
+    }
     private void bestCostRouteCrossoverSwap1() {
         crossoverChromosomes.clear();
         List<Callable<Void>> crossoverTasks = new ArrayList<>();
@@ -295,6 +308,19 @@ public class GeneticAlgorithm {
             }
         }
         invokeThreads(executor,crossoverTasks);
+    }
+    private void invokeThreads(ExecutorService service, List<Callable<Void>> crossoverTasks) {
+        try {
+            service.invokeAll(crossoverTasks);
+            List<Chromosome> xChromosomes = crossoverChromosomes;
+            synchronized (xChromosomes){
+                tempPopulation.addAll(xChromosomes);
+            }
+        }catch (InterruptedException e){
+            Thread.currentThread().interrupt();
+        }finally {
+            service.shutdown();
+        }
     }
 
     @FunctionalInterface
