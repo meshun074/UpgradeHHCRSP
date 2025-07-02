@@ -7,7 +7,7 @@ public class Configuration {
     private final double elitismRate;
     private final int TSRate;
     private final String mutationMethod;
-    private final double mutationRate;
+    private final float mutationRate;
     private final String crossoverMethod;
     private final double crossoverRate;
     private final int numberOfElites;
@@ -15,7 +15,7 @@ public class Configuration {
     private final boolean LSStart;
     private final double LSStartRate;
 
-    public Configuration(String instance, int populationSize, String selectionMethod, double elitismRate, int TSRate, String mutationMethod, double mutationRate, String crossoverMethod, double crossoverRate, int numberOfElites, int LSRate, boolean LSStart, double LSStartRate) {
+    public Configuration(String instance, int populationSize, String selectionMethod, double elitismRate, int TSRate, String mutationMethod, float mutationRate, String crossoverMethod, double crossoverRate, int numberOfElites, int LSRate, boolean LSStart, double LSStartRate) {
         this.instance = instance;
         this.populationSize = populationSize;
         this.selectionMethod = selectionMethod;
@@ -54,7 +54,7 @@ public class Configuration {
         return mutationMethod;
     }
 
-    public double getMutRate() {
+    public float getMutRate() {
         return mutationRate;
     }
 

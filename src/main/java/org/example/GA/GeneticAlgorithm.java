@@ -63,7 +63,7 @@ public class GeneticAlgorithm {
         this.LSStart = config.isLSStart();
         this.LSStartSize = popSize - (int) (config.getLSStartRate() * popSize);
         this.gen = gen;
-        selectTechnique = "T";
+        selectTechnique = config.getSelectionMethod();
         this.mutType = config.getMutationMethod();
         this.crossType = config.getCrossoverMethod();
         this.crossoverStrategy = getCrossoverStrategy();
@@ -77,7 +77,7 @@ public class GeneticAlgorithm {
         }
         this.crossRate = config.getCrossRate();
         this.crossSize = (int) (popSize* crossRate);
-        this.mutRate = 0.1584f;
+        this.mutRate = config.getMutRate();
         mutSize = (int) (mutRate *popSize);
         popProbabilities = new double[popSize];
         patientLength = data.getPatients().length;

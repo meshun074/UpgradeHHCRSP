@@ -3,18 +3,18 @@ package org.example.GA;
 public class parseArguments {
     public static Configuration getConfiguration(String[] args) {
         String instance = "";
-        int populationSize = 0;
-        String selectionMethod = "";
-        double elitismRate = 0;
-        int TSRate = 0;
-        String mutationMethod = "";
-        double mutRate = 0;
-        String crossoverMethod = "";
-        double crossRate =0;
-        int numberOfElites= 0;
-        int LSRate =0;
-        boolean LSStart = true;
-        double LSStartRate = 0.0;
+        int populationSize = 300;
+        String selectionMethod = "T";
+        double elitismRate = 0.1;
+        int TSRate = 4;
+        String mutationMethod = "RS";
+        float mutRate = 0.1584f;
+        String crossoverMethod = "BS";
+        double crossRate =1.0;
+        int numberOfElites= 5;
+        int LSRate =10;
+        boolean LSStart = false;
+        double LSStartRate = 0.9;
 //        String arg = "--popSize 300 --mutRate 0.05 --mutMethod S --crossRate 1.0 --crossMethod BS --selection RW --elitism 0.1 --numberOfElites 5 --LSRate 10 --TSRate 4 --instance src/main/java/org/example/Data/instance/200_1.json";
         for (int i = 0; i < args.length; i++) {
             switch (args[i]) {
@@ -25,7 +25,7 @@ public class parseArguments {
                     populationSize = Integer.parseInt(args[++i]);
                     break;
                 case "--mutRate":
-                    mutRate = Double.parseDouble(args[++i]);
+                    mutRate = Float.parseFloat(args[++i]);
                     break;
                 case "--mutMethod":
                     mutationMethod = args[++i];
