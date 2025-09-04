@@ -280,7 +280,7 @@ public class EvaluationFunction {
 
     static void UpdateCost(Chromosome ch) {
         double cost = (1 / 3d * ch.getTotalTravelCost()) + (1 / 3d * ch.getTotalTardiness()) + (1 / 3d * ch.getHighestTardiness());
-        cost = Math.round(cost * 1000.0) / 1000.0;
+//        cost = Math.round(cost * 1000.0) / 1000.0;
         ch.setFitness(cost);
     }
 

@@ -78,7 +78,7 @@ public class Main {
 
                 assert bestChromosome != null;
                 System.out.println("----------------- Solution ----------------------");
-                System.out.println("Instance_" + instanceName + "_" + instanceNumber + " Best Fitness: " + bestChromosome.getFitness());
+                System.out.println("Instance_" + instanceName + "_" + instanceNumber + " Best Fitness: " + Math.round(bestChromosome.getFitness() * 1000.0) / 1000.0);
                 System.out.println("Total Distance: " + bestChromosome.getTotalTravelCost() + " Total Tardiness: " + bestChromosome.getTotalTardiness() + " Highest Tardiness: " + bestChromosome.getHighestTardiness());
                 bestChromosome.showSolution(0);
             } catch (Exception e) {

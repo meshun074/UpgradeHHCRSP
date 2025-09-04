@@ -146,10 +146,10 @@ public class GeneticAlgorithm {
 
     private CrossoverStrategy getCrossoverStrategy() {
         if (crossType.equals("BS")) {
-            BestCostRouteCrossoverSwap.initialize(data);
+            BestCostRouteCrossoverSwapNew.initialize(data);
             return this::bestCostRouteCrossoverSwap;
         }
-        BestCostRouteCrossover.initialize(data);
+        BestCostRouteCrossoverNew.initialize(data);
         return this::bestCostRouteCrossover;
     }
 
@@ -187,7 +187,7 @@ public class GeneticAlgorithm {
     private void bestCostRouteCrossover() {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
         crossoverChromosomes.clear();
-        List<Callable<Void>> crossoverTasks = new ArrayList<>();
+        List<Callable<Void>> crossoverTasks = new ArrayList<>(crossSize);
         if(selectTechnique.equals("W")) {
             rouletteWheelSetup();
         }
@@ -205,18 +205,21 @@ public class GeneticAlgorithm {
             int finalR2 = r2;
             int finalIndex =index;
             crossoverTasks.add(()->{
-                new BestCostRouteCrossover(this, finalR2,p1,p2,finalIndex).run();
-                return null;
-            });
-            int finalR1 = r1;
-            int finalIndex1 =index;
-            crossoverTasks.add(() -> {
-                new BestCostRouteCrossover(this, finalR1, p2, p1,finalIndex1).run();
+                new BestCostRouteCrossoverNew(this, finalR2,p1,p2,finalIndex,rand).run();
                 return null;
             });
             index++;
+            if (index < crossSize){
+                int finalR1 = r1;
+                int finalIndex1 = index;
+                crossoverTasks.add(() -> {
+                    new BestCostRouteCrossoverNew(this, finalR1, p2, p1, finalIndex1, rand).run();
+                    return null;
+                });
+                index++;
+            }
         }
-        invokeThreadsBC(executor,crossoverTasks);
+        invokeThreads(executor,crossoverTasks);
     }
     private void invokeThreadsBC(ExecutorService service, List<Callable<Void>> crossoverTasks) {
         try {
@@ -247,7 +250,6 @@ public class GeneticAlgorithm {
     }
     private void bestCostRouteCrossoverSwap1() {
         crossoverChromosomes.clear();
-        List<Callable<Void>> crossoverTasks = new ArrayList<>();
         if(selectTechnique.equals("W")) {
             rouletteWheelSetup();
         }
@@ -277,7 +279,7 @@ public class GeneticAlgorithm {
     private void bestCostRouteCrossoverSwap() {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
         crossoverChromosomes.clear();
-        List<Callable<Void>> crossoverTasks = new ArrayList<>();
+        List<Callable<Void>> crossoverTasks = new ArrayList<>(crossSize);
         if(selectTechnique.equals("W")) {
             rouletteWheelSetup();
         }
@@ -294,14 +296,14 @@ public class GeneticAlgorithm {
             }while (genes1[r1].isEmpty()||genes2[r2].isEmpty());
             int finalR2 = r2;
             crossoverTasks.add(()->{
-                new BestCostRouteCrossoverSwap(this, finalR2,p1,p2).run();
+                new BestCostRouteCrossoverSwapNew(this, finalR2,p1,p2,rand).run();
                 return null;
             });
             index++;
             int finalR1 = r1;
             if (index < crossSize){
                 crossoverTasks.add(()->{
-                    new BestCostRouteCrossoverSwap(this, finalR1,p2,p1).run();
+                    new BestCostRouteCrossoverSwapNew(this, finalR1,p2,p1,rand).run();
                     return null;
                 });
                 index++;
@@ -350,7 +352,7 @@ public class GeneticAlgorithm {
     private void swapRouteMutation() {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
         mutationChromosomes.clear();
-        List<Callable<Void>> mutationTasks = new ArrayList<>();
+        List<Callable<Void>> mutationTasks = new ArrayList<>(mutSize);
         if(selectTechnique.equals("W")) {
             rouletteWheelSetup();
         }
@@ -377,7 +379,7 @@ public class GeneticAlgorithm {
     private void routeInverseMutation() {
         ExecutorService executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
         mutationChromosomes.clear();
-        List<Callable<Void>> mutationTasks = new ArrayList<>();
+        List<Callable<Void>> mutationTasks = new ArrayList<>(mutSize);
         if(selectTechnique.equals("W")) {
             rouletteWheelSetup();
         }
@@ -505,8 +507,8 @@ public class GeneticAlgorithm {
     }
     private void LocalSearch(int generation) {
         try (ExecutorService executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE)) {
-            List<Callable<Void>> LSTasks = new ArrayList<>(popSize);
-            HashMap<Integer, Chromosome> newMap = new HashMap<>(popSize);
+            List<Callable<Void>> LSTasks = new ArrayList<>(popSize-LSStartSize);
+            HashMap<Integer, Chromosome> newMap = new HashMap<>(popSize-LSStartSize);
             LSChromosomes = Collections.synchronizedMap(newMap);
             sortPopulation(newPopulation);
             if (generation == 0) {
@@ -514,7 +516,7 @@ public class GeneticAlgorithm {
                     Chromosome ch = newPopulation.get(i);
                     int index = i;
                     LSTasks.add(() -> {
-                        new LocalSearch(this, ch, index, generation).run();
+                        new LocalSearchNew(this, ch, index, rand, generation).run();
                         return null;
                     });
                 }
@@ -524,7 +526,7 @@ public class GeneticAlgorithm {
                     int index = eliteRandomList.get(j);
                     Chromosome ch = newPopulation.get(index);
                     LSTasks.add(() -> {
-                        new LocalSearch(this, ch, index, generation).run();
+                        new LocalSearchNew(this, ch, index, rand, generation).run();
                         return null;
                     });
                 }
@@ -578,10 +580,10 @@ public class GeneticAlgorithm {
         bestChromosome = newPopulation.get(0);
         double averageFitness = newPopulation.stream().mapToDouble(Chromosome::getFitness).sum() / popSize;
 
-        System.out.println("Time at: " + getTotalTimeSeconds() + " CPU Timer " + String.format("%.3f", getTotalCPUTimeSeconds()) + " seconds Generation " + generation + " Generation without Improvement: "+ terminator +" Best fitness: " + bestChromosome.getFitness() + " Average fitness: " + averageFitness);
+        System.out.println("Time at: " + getTotalTimeSeconds() + " CPU Timer " + String.format("%.3f", getTotalCPUTimeSeconds()) + " seconds Generation " + generation + " Generation without Improvement: "+ terminator +" Best fitness: " + Math.round(bestChromosome.getFitness() * 1000.0) / 1000.0  + " Average fitness: " + averageFitness);
         if (generation == gen) {
             bestChromosome.showSolution(generation);
-            System.out.println("Time at: " + getTotalTimeSeconds() + " CPU Timer " + String.format("%.3f", getTotalCPUTimeSeconds()) + " seconds Generation " + generation + " Fitness: " + bestChromosome.getFitness() + " Total Distance: " + bestChromosome.getTotalTravelCost() + " Total Tardiness: " + bestChromosome.getTotalTardiness() + " Highest Tardiness: " + bestChromosome.getHighestTardiness());
+            System.out.println("Time at: " + getTotalTimeSeconds() + " CPU Timer " + String.format("%.3f", getTotalCPUTimeSeconds()) + " seconds Generation " + generation + " Fitness: " + Math.round(bestChromosome.getFitness() * 1000.0) / 1000.0 + " Total Distance: " + bestChromosome.getTotalTravelCost() + " Total Tardiness: " + bestChromosome.getTotalTardiness() + " Highest Tardiness: " + bestChromosome.getHighestTardiness());
         }
     }
 
