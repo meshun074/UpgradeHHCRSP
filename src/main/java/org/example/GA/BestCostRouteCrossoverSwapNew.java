@@ -88,7 +88,7 @@ public class BestCostRouteCrossoverSwapNew implements Runnable {
                         for (int n = 0; n <= c1Routes[second].size(); n++) {
                             if (noEvaluationConflicts(c1Routes[first], c1Routes[second], m, n)) {
                                 double tempCost = calMoveCost(first, m, second, n, patient, cTemp, bestCost, shifts, isInvalid);
-                                if (bestCost == Double.MAX_VALUE || bestCost - tempCost > 0.001 || tempCost <= bestCost && rand.nextBoolean()) {
+                                if (bestCost == Double.MAX_VALUE || bestCost - tempCost > 0.001 && bestCost != Double.POSITIVE_INFINITY && tempCost != Double.POSITIVE_INFINITY  || tempCost <= bestCost && rand.nextBoolean()) {
                                     bestCost = tempCost;
                                     bestFirst = first;
                                     bestSecond = second;
@@ -114,7 +114,7 @@ public class BestCostRouteCrossoverSwapNew implements Runnable {
                     int first = caregiverPair.getFirst();
                     for (int k = 0; k <= c1Routes[first].size(); k++) {
                         double tempCost = calMoveCost(first,k,-1,-1,patient,cTemp,bestCost,shifts,isInvalid);
-                        if (bestCost == Double.MAX_VALUE || bestCost - tempCost > 0.001 || tempCost <= bestCost && rand.nextBoolean()) {
+                        if (bestCost == Double.MAX_VALUE || bestCost - tempCost > 0.001 && bestCost != Double.POSITIVE_INFINITY && tempCost != Double.POSITIVE_INFINITY || tempCost <= bestCost && rand.nextBoolean()) {
                             bestCost = tempCost;
                             bestFirst = first;
                             bestM = k;
@@ -394,7 +394,7 @@ public class BestCostRouteCrossoverSwapNew implements Runnable {
                     int p3 = route1.get(z);
 //                    System.out.println("Yaa");
                     double tempCost = calSwapMoveCost(first,firstPosition,-1,-1,patient,p3,z,-1,-1,ch,bestCost,shifts,isInvalid);
-                    if (bestCost == Double.MAX_VALUE || bestCost - tempCost > 0.001 || tempCost <= bestCost && rand.nextBoolean()) {
+                    if (bestCost == Double.MAX_VALUE || bestCost - tempCost > 0.001 && bestCost != Double.POSITIVE_INFINITY && tempCost != Double.POSITIVE_INFINITY || tempCost <= bestCost && rand.nextBoolean()) {
                         bestCost = tempCost;
                         bestZ = z;
                         bestFirstPatient = p3;
@@ -407,7 +407,7 @@ public class BestCostRouteCrossoverSwapNew implements Runnable {
                     int p4 = route2.get(l);
 //                    System.out.println("Naa");
                     double tempCost = calSwapMoveCost(-1,-1,second,secondPosition,patient,-1,-1,p4,l,ch,bestCost,shifts,isInvalid);
-                    if (bestCost == Double.MAX_VALUE || bestCost - tempCost > 0.001 || tempCost <= bestCost && rand.nextBoolean()) {
+                    if (bestCost == Double.MAX_VALUE || bestCost - tempCost > 0.001 && bestCost != Double.POSITIVE_INFINITY && tempCost != Double.POSITIVE_INFINITY || tempCost <= bestCost && rand.nextBoolean()) {
                         bestCost = tempCost;
                         bestL = l;
                         bestSecondPatient = p4;
@@ -425,7 +425,7 @@ public class BestCostRouteCrossoverSwapNew implements Runnable {
 
 //                            System.out.println("Maa");
                             double tempCost = calSwapMoveCost(first,firstPosition,second,secondPosition,patient,p3,z,p4,l,ch,bestCost,shifts,isInvalid);
-                            if (bestCost == Double.MAX_VALUE || bestCost - tempCost > 0.001 || tempCost <= bestCost && rand.nextBoolean()) {
+                            if (bestCost == Double.MAX_VALUE || bestCost - tempCost > 0.001 && bestCost != Double.POSITIVE_INFINITY && tempCost != Double.POSITIVE_INFINITY || tempCost <= bestCost && rand.nextBoolean()) {
                                 bestCost = tempCost;
                                 bestL = l;
                                 bestSecondPatient = p4;
@@ -457,7 +457,7 @@ public class BestCostRouteCrossoverSwapNew implements Runnable {
                     int p2 = route1.get(i);
 
                     double tempCost = calSwapMoveCost(first,firstPosition,-1,-1,patient,p2,i,-1,-1,ch,bestCost,shifts,isInvalid);
-                    if (bestCost == Double.MAX_VALUE || bestCost - tempCost > 0.001 || tempCost <= bestCost && rand.nextBoolean()) {
+                    if (bestCost == Double.MAX_VALUE || bestCost - tempCost > 0.001 && bestCost != Double.POSITIVE_INFINITY && tempCost != Double.POSITIVE_INFINITY || tempCost <= bestCost && rand.nextBoolean()) {
                         bestCost = tempCost;
                         bestI = i;
                         bestPatient = p2;

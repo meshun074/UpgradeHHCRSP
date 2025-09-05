@@ -170,12 +170,12 @@ public class GeneticAlgorithm {
                 r2=rand.nextInt(caregiversNum);
             }while (genes1[r1].isEmpty()||genes2[r2].isEmpty());
             int finalR2 = r2;
-            BestCostRouteCrossover bs = new BestCostRouteCrossover(this, finalR2,p1,p2,index);
+            BestCostRouteCrossoverNew bs = new BestCostRouteCrossoverNew(this, finalR2,p1,p2,index,rand);
             tempPopulation.add(bs.Crossover());
             index++;
             int finalR1 = r1;
             if (index < crossSize){
-               bs = new BestCostRouteCrossover(this, finalR1,p2,p1,index);
+               bs = new BestCostRouteCrossoverNew(this, finalR1,p2,p1,index,rand);
                 tempPopulation.add(bs.Crossover());
                 index++;
             }
