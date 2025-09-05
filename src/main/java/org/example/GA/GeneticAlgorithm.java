@@ -83,7 +83,7 @@ public class GeneticAlgorithm {
         patientLength = data.getPatients().length;
         caregiversNum = data.getCaregivers().length;
         EvaluationFunction.initialize(data);
-        LocalSearch.initialize(data);
+        LocalSearchNew.initialize(data);
         limit = Math.min(numOfEliteSearch, eliteRandomList.size());
         nextPopulation = new ArrayList<>(popSize);
         tempPopulation = new ArrayList<>(popSize);
@@ -265,12 +265,12 @@ public class GeneticAlgorithm {
                 r2=rand.nextInt(caregiversNum);
             }while (genes1[r1].isEmpty()||genes2[r2].isEmpty());
             int finalR2 = r2;
-            BestCostRouteCrossoverSwap bs = new BestCostRouteCrossoverSwap(this, finalR2,p1,p2);
+            BestCostRouteCrossoverSwapNew bs = new BestCostRouteCrossoverSwapNew(this, finalR2,p1,p2,rand);
             tempPopulation.add(bs.Crossover());
             index++;
             int finalR1 = r1;
             if (index < crossSize){
-                bs =new BestCostRouteCrossoverSwap(this, finalR1,p2,p1);
+                bs =new BestCostRouteCrossoverSwapNew(this, finalR1,p2,p1,rand);
                 tempPopulation.add(bs.Crossover());
                 index++;
             }
@@ -485,7 +485,7 @@ public class GeneticAlgorithm {
             for (int i = LSStartSize; i < popSize; i++) {
                 Chromosome ch = newPopulation.get(i);
                 int index = i;
-                LocalSearch ls = new LocalSearch(this,ch, index, generation);
+                LocalSearchNew ls = new LocalSearchNew(this,ch, index, rand,generation);
                 Chromosome temp = ls.search();
                 newPopulation.set(i, temp);
             }
@@ -494,7 +494,7 @@ public class GeneticAlgorithm {
             for (int j = 0; j < limit; j++) {
                 int index = eliteRandomList.get(j);
                 Chromosome ch = newPopulation.get(index);
-                LocalSearch ls = new LocalSearch(this,ch, index, generation);
+                LocalSearchNew ls = new LocalSearchNew(this,ch, index,rand, generation);
                 Chromosome ch1 = ls.search();
                 if(ch1.getFitness() < ch.getFitness()) {
                     newPopulation.remove(newPopulation.size() - 1);

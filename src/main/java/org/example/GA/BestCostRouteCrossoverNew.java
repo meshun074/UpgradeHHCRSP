@@ -91,7 +91,7 @@ public class BestCostRouteCrossoverNew implements Runnable {
                         for (int n = 0; n <= c1Routes[second].size(); n++) {
                             if (noEvaluationConflicts(c1Routes[first], c1Routes[second], m, n)) {
                                 double tempCost = calMoveCost(first, m, second, n, patient, cTemp, bestCost, shifts, isInvalid);
-                                if (bestCost - tempCost > 0.001 || tempCost <= bestCost && rand.nextBoolean()) {
+                                if (bestCost == Double.MAX_VALUE || bestCost - tempCost > 0.001 || tempCost <= bestCost && rand.nextBoolean()) {
                                     bestCost = tempCost;
                                     bestFirst = first;
                                     bestSecond = second;
@@ -116,7 +116,7 @@ public class BestCostRouteCrossoverNew implements Runnable {
                     int first = caregiverPair.getFirst();
                     for (int k = 0; k <= c1Routes[first].size(); k++) {
                         double tempCost = calMoveCost(first,k,-1,-1,patient,cTemp,bestCost,shifts,isInvalid);
-                        if (bestCost - tempCost > 0.001 || tempCost <= bestCost && rand.nextBoolean()) {
+                        if (bestCost == Double.MAX_VALUE || bestCost - tempCost > 0.001 || tempCost <= bestCost && rand.nextBoolean()) {
                             bestCost = tempCost;
                             bestFirst = first;
                             bestM = k;
