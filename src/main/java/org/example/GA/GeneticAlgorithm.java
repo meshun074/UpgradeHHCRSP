@@ -52,10 +52,10 @@ public class GeneticAlgorithm {
     private static final int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
 
 
-    public GeneticAlgorithm(Configuration config, int gen, InstancesClass data) {
+    public GeneticAlgorithm(Configuration config, long seed, int gen, InstancesClass data) {
         this.osBean = ManagementFactory.getPlatformMXBean(OperatingSystemMXBean.class);
         this.data = data;
-        rand = new Random(System.nanoTime());
+        rand = new Random(seed);
         this.numOfEliteSearch = config.getNumberOfElites();
         this.LSRate = config.getLSRate();
         this.TSRate = config.getTSRate();
