@@ -60,8 +60,13 @@ public class Patient {
         int firstCaregiver = possibleFirstCaregiverList.get(random.nextInt(possibleFirstCaregiver.size()));
         int secondCaregiver = -1;
         if(required_caregivers.length > 1){
+            int count = 1;
             do {
+                if(count % 3 == 0) {
+                    firstCaregiver = possibleFirstCaregiverList.get(random.nextInt(possibleFirstCaregiver.size()));
+                }
                 secondCaregiver = possibleSecondCaregiverList.get(random.nextInt(possibleSecondCaregiver.size()));
+                count++;
             }
             while (firstCaregiver == secondCaregiver);
         }
