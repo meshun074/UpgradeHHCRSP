@@ -147,7 +147,7 @@ public class BestCostRouteCrossoverSwapNew implements Runnable {
             if(second !=-1){
                 c1Routes[second].remove(Integer.valueOf(patient));
             }
-            EvaluationFunction.Evaluate(temp);
+            EvaluationFunction.EvaluateNew(temp);
             return temp.getFitness();
         }
         int size = 1;
@@ -487,7 +487,7 @@ public class BestCostRouteCrossoverSwapNew implements Runnable {
                 c1Routes[second].set(patient2Position, patient);
             }
             Chromosome temp = new Chromosome(c1Routes, 0.0, false);
-            EvaluationFunction.Evaluate(temp);
+            EvaluationFunction.EvaluateNew(temp);
             if(patient1!= -1) {
                 c1Routes[first].set(m, patient);
                 c1Routes[first].set(patient1Position, patient1);

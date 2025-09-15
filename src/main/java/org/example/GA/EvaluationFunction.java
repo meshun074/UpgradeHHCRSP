@@ -223,6 +223,181 @@ public class EvaluationFunction {
         UpdateCost(ch);
     }
 
+    public static void EvaluateNew(Chromosome ch) {
+        ch.setHighestTardiness(0);
+        ch.setTotalTardiness(0);
+        ch.setTotalTravelCost(0);
+        ch.setFitness(Double.POSITIVE_INFINITY);
+        double travelCost = 0;
+        double[] highestAndTotalTardiness = new double[2];
+        int[] routeEndPoint = new int[allCaregivers.length];
+        double[] routesCurrentTime = new double[allCaregivers.length];
+
+        Set<Integer> track = trackHolder.get(); // Initial capacity for small patient sets
+        List<Integer>[] genes = ch.getGenes();
+        for (int i = 0; i < genes.length; i++) {
+            List<Integer> route = genes[i];
+            for (int j = 0; j < route.size(); j++) {
+                if(j == 0){
+                    int nextIndex = route.get(j)+1;
+                    travelCost += distances[0][nextIndex];
+                }else if(j == route.size()-1){
+                    int prevIndex = route.get(j-1)+1;
+                    int nextIndex = route.get(j)+1;
+                    travelCost += distances[prevIndex][nextIndex];
+                    travelCost += distances[nextIndex][0];
+                }else {
+                    int prevIndex = route.get(j-1)+1;
+                    int nextIndex = route.get(j)+1;
+                    travelCost += distances[prevIndex][nextIndex];
+                }
+            }
+        }
+
+        ch.setTotalTravelCost(travelCost);
+        travelCost = 1/3d * travelCost;
+        try {
+            double solutionCost =0;
+            for (int i = 0; i < routeEndPoint.length; i++) {
+                List<Integer> route = genes[i];
+                int routeEnd = routeEndPoint[i];
+                if (routeEnd != -1) {
+                    for (int j = routeEnd; j < route.size(); j++) {
+                        if (j == 0) {
+                            solutionCost = patientIsAssigned(genes, i, -1, route.get(j), travelCost, routesCurrentTime, highestAndTotalTardiness, routeEndPoint, track);
+                        } else {
+                            solutionCost = patientIsAssigned(genes, i,  route.get(j - 1), route.get(j), travelCost, routesCurrentTime, highestAndTotalTardiness, routeEndPoint, track);
+                        }
+                        if (solutionCost == Double.POSITIVE_INFINITY) {
+                            ch.setFitness(Double.POSITIVE_INFINITY);
+                            return;
+                        }
+
+                        track.clear();
+                    }
+                }
+            }
+            ch.setHighestTardiness(highestAndTotalTardiness[0]);
+            ch.setTotalTardiness(highestAndTotalTardiness[1]);
+            ch.setFitness(solutionCost);
+        }
+        finally {
+            track.clear();
+        }
+    }
+
+    private static double patientIsAssigned(List<Integer>[] genes, int route1, int curPatient1, int patient, double totalTravelCost, double[] routesCurrentTime, double[] highestAndTotalTardiness, int[] routeEndPoint, Set<Integer> track) {
+        Patient p = allPatients[patient];
+        double[] timeWindow = p.getTime_window();
+        int currentLocation1 = curPatient1 + 1;
+        int nextLocation = patient + 1;
+
+        double arrivalTime1 = routesCurrentTime[route1] + distances[currentLocation1][nextLocation];
+        double startTime1 = Math.max(arrivalTime1, timeWindow[0]);
+
+        if (p.getRequired_caregivers().length > 1) {
+            if (!track.add(patient)) {
+                return Double.POSITIVE_INFINITY;
+            }
+
+            int route2 = findOtherCaregiver(patient, route1, genes, totalTravelCost,  routesCurrentTime, highestAndTotalTardiness, routeEndPoint, track);
+            if (route2 > allCaregivers.length - 1) {
+                return Double.POSITIVE_INFINITY;
+            }
+
+            int position2 = routeEndPoint[route2] - 1;
+            int curPatient2;
+            if (position2 == -1) {
+                curPatient2 = -1;
+            }else {
+                curPatient2 = genes[route2].get(position2);
+            }
+
+            if (SwapRoutes(p, route1, route2)) {
+                int temp = route1;
+                route1 = route2;
+                route2 = temp;
+                temp = curPatient1;
+                curPatient1 = curPatient2;
+                curPatient2 = temp;
+                currentLocation1 = curPatient1 + 1;
+                arrivalTime1 = routesCurrentTime[route1] + distances[currentLocation1][nextLocation];
+                startTime1 = Math.max(arrivalTime1, timeWindow[0]);
+            }
+
+            int currentLocation2 = curPatient2 + 1;
+            double arrivalTime2 = routesCurrentTime[route2] + distances[currentLocation2][nextLocation];
+            double startTime2 = Math.max(arrivalTime2, timeWindow[0]);
+
+            if (p.getSynchronization().getType().equals("sequential")) {
+                double[] syncDistances = p.getSynchronization().getDistance();
+                startTime2 = Math.max(startTime2, startTime1 + syncDistances[0]);
+                if (startTime2 - startTime1 > syncDistances[1]) {
+                    startTime1 = startTime2 - syncDistances[1];
+                }
+                double tardiness = Math.max(0, startTime1 - timeWindow[1]);
+                highestAndTotalTardiness[0] = Math.max(highestAndTotalTardiness[0], tardiness);
+                highestAndTotalTardiness[1] += tardiness;
+                tardiness = Math.max(0, startTime2 - timeWindow[1]);
+                highestAndTotalTardiness[0] = Math.max(highestAndTotalTardiness[0], tardiness);
+                highestAndTotalTardiness[1] += tardiness;
+            }else {
+                double startTime = Math.max(startTime1, startTime2);
+                double tardiness = Math.max(0, startTime - timeWindow[1]);
+                highestAndTotalTardiness[0] = Math.max(highestAndTotalTardiness[0], tardiness);
+                highestAndTotalTardiness[1] += (2*tardiness);
+                startTime1 = startTime2 = startTime;
+            }
+            routeEndPoint[route1]++;
+            routeEndPoint[route2]++;
+            routesCurrentTime[route1] = startTime1 + p.getRequired_caregivers()[0].getDuration();
+            routesCurrentTime[route2] = startTime2 + p.getRequired_caregivers()[1].getDuration();
+
+        } else {
+            double tardiness = Math.max(0, startTime1 - timeWindow[1]);
+            highestAndTotalTardiness[0] = Math.max(highestAndTotalTardiness[0], tardiness);
+            highestAndTotalTardiness[1] += tardiness;
+            routeEndPoint[route1]++;
+            routesCurrentTime[route1] = startTime1 + p.getRequired_caregivers()[0].getDuration();
+        }
+        return totalTravelCost + (1 / 3d * highestAndTotalTardiness[0]) + (1 / 3d * highestAndTotalTardiness[1]);
+    }
+
+    private static int findOtherCaregiver(int patient, int route1, List<Integer>[] genes, double totalTravelCost, double[] routesCurrentTime, double[] highestAndTotalTardiness, int[] routeEndPoint, Set<Integer> track) {
+        for (int i = 0; i < genes.length; i++) {
+            if (i != route1 && genes[i].contains(patient)) {
+                List<Integer> route = genes[i];
+                int patientPosition = route.indexOf(patient);
+
+                int j = routeEndPoint[i];
+                while(routeEndPoint[i] != patientPosition && j < route.size()) {
+                    int curPatient;
+                    if(j==0)
+                        curPatient = -1;
+                    else
+                        curPatient = route.get(j-1);
+                    if(patientIsAssigned(genes,i,curPatient,route.get(j),totalTravelCost,routesCurrentTime,highestAndTotalTardiness,routeEndPoint,track)==Double.POSITIVE_INFINITY)
+                        return Integer.MAX_VALUE;
+                    j++;
+                }
+                return i;
+            }
+        }
+        return Integer.MAX_VALUE;
+    }
+    private static boolean SwapRoutes(Patient p, int route1, int route2) {
+        Required_Caregiver[] requiredCaregivers = p.getRequired_caregivers();
+        String service1 = requiredCaregivers[0].getService();
+        String service2 = requiredCaregivers[1].getService();
+
+        Set<Integer> service1Routes = dataset.getQualifiedCaregiver(service1);
+        Set<Integer> service2Routes = dataset.getQualifiedCaregiver(service2);
+
+        return (service1Routes.contains(route2) && !service2Routes.contains(route2)) ||
+                (service2Routes.contains(route1) && !service1Routes.contains(route1)) ||
+                (service1Routes.contains(route2) && !service1Routes.contains(route1));
+    }
+
     public static boolean patientAssignment(Chromosome ch, int patient, Shift caregiver1, Shift[] routes, int i, Set<Integer> track) {
         Patient p = allPatients[patient];
         double[] timeWindow = p.getTime_window();
@@ -276,7 +451,6 @@ public class EvaluationFunction {
         }
         return false;
     }
-
 
     static void UpdateCost(Chromosome ch) {
         double cost = (1 / 3d * ch.getTotalTravelCost()) + (1 / 3d * ch.getTotalTardiness()) + (1 / 3d * ch.getHighestTardiness());

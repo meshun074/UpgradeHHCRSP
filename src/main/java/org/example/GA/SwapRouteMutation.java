@@ -68,7 +68,7 @@ public class SwapRouteMutation implements Runnable {
         genes[r1] = newRoute1;
         genes[r2] = newRoute2;
         mutant.setGenes(genes);
-        EvaluationFunction.Evaluate(mutant);
+        EvaluationFunction.EvaluateNew(mutant);
         return mutant;
     }
     private int[] selectMutationRoutes(List<Integer>[] genes) {

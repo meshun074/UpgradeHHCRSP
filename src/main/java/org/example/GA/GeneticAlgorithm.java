@@ -333,6 +333,9 @@ public class GeneticAlgorithm {
     private MutationStrategy getMutationStrategy() {
         if (mutType.equals("RI")) {
             return this::routeInverseMutation;
+        }else if (mutType.equals("BS")) {
+            BCRCSMutation.initialize(data);
+            return this::bcrcsMutation;
         }
         SwapRouteMutation.initialize(data);
         return this::swapRouteMutation;
@@ -360,6 +363,34 @@ public class GeneticAlgorithm {
             Chromosome p = newPopulation.get(selectChromosome());
             mutationTasks.add(()->{
                 new SwapRouteMutation(this, p).run();
+                return null;
+            });
+        }
+        invokeMutationThreads(executor, mutationTasks);
+    }
+
+    private void bcrcsMutation1() {
+
+        if(selectTechnique.equals("W")) {
+            rouletteWheelSetup();
+        }
+        for(int i = 0; i < mutSize; i++){
+            Chromosome p = newPopulation.get(selectChromosome());
+            BCRCSMutation bm = new BCRCSMutation(this, p,rand);
+            tempMutPopulation.add(bm.mutate());
+        }
+    }
+    private void bcrcsMutation() {
+        ExecutorService executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+        mutationChromosomes.clear();
+        List<Callable<Void>> mutationTasks = new ArrayList<>(mutSize);
+        if(selectTechnique.equals("W")) {
+            rouletteWheelSetup();
+        }
+        for(int i = 0; i < mutSize; i++){
+            Chromosome p = newPopulation.get(selectChromosome());
+            mutationTasks.add(()->{
+            new BCRCSMutation(this, p,rand).run();
                 return null;
             });
         }
