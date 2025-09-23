@@ -241,6 +241,9 @@ public class EvaluationFunction {
                 if(j == 0){
                     int nextIndex = route.get(j)+1;
                     travelCost += distances[0][nextIndex];
+                    if(route.size() == 1){
+                        travelCost += distances[nextIndex][0];
+                    }
                 }else if(j == route.size()-1){
                     int prevIndex = route.get(j-1)+1;
                     int nextIndex = route.get(j)+1;
