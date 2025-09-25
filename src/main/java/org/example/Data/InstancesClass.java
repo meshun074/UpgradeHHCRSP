@@ -51,6 +51,7 @@ public class InstancesClass {
             if(p.getRequired_caregivers().length>1){
                 List<CaregiverPair> caregiverPairs = getListOfCaregiverPairs(p);
                 p.setAllPossibleCaregiverCombinations(caregiverPairs);
+                p.setAllPossibleCaregiverCombinationsCrossover(new LinkedHashSet<>(caregiverPairs));
             }else {
                 List<CaregiverPair> caregiverPairs = new ArrayList<>();
                 CaregiverPair caregiverPair;
@@ -60,6 +61,7 @@ public class InstancesClass {
                     caregiverPairs.add(caregiverPair);
                 }
                 p.setAllPossibleCaregiverCombinations(caregiverPairs);
+                p.setAllPossibleCaregiverCombinationsCrossover(new LinkedHashSet<>(caregiverPairs));
             }
         }
     }

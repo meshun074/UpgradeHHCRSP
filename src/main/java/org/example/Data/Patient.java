@@ -20,6 +20,7 @@ public class Patient {
     private List<Integer> possibleSecondCaregiverList;
     private Set<Integer> allCaregiversForDoubleService;
     private List<CaregiverPair> allPossibleCaregiverCombinations;
+    private Set<CaregiverPair> allPossibleCaregiverCombinationsCrossover;
     private final ThreadLocalRandom random = ThreadLocalRandom.current();
 
     public Set<Integer> getPossibleFirstCaregiver() {
@@ -38,6 +39,14 @@ public class Patient {
     public void setPossibleSecondCaregiver(Set<Integer> possibleSecondCaregiver) {
         this.possibleSecondCaregiver = new HashSet<>(possibleSecondCaregiver);
         this.possibleSecondCaregiverList = new ArrayList<>(possibleSecondCaregiver);
+    }
+
+    public Set<CaregiverPair> getAllPossibleCaregiverCombinationsCrossover() {
+        return allPossibleCaregiverCombinationsCrossover;
+    }
+
+    public void setAllPossibleCaregiverCombinationsCrossover(Set<CaregiverPair> allPossibleCaregiverCombinationsCrossover) {
+        this.allPossibleCaregiverCombinationsCrossover = allPossibleCaregiverCombinationsCrossover;
     }
 
     public List<CaregiverPair> getAllPossibleCaregiverCombinations() {

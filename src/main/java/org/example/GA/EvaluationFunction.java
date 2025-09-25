@@ -137,6 +137,33 @@ public class EvaluationFunction {
         }
     }
 
+    public static void removeAffectedPatientNew(int iPatient, int[] routeMove, int[] positionMove, Chromosome base, int[] routeEndPoint) {
+        Map<Integer, Set<Integer>> patientToRoutesMap = base.getPatientToRoutesMap();
+        List<Integer>[] genes = base.getGenes();
+        for(int j = 0; j < routeMove.length; j++){
+            int first = routeMove[j];
+            int firstPosition = positionMove[j];
+            List<Integer> currentRoute = genes[first];
+            for (int i = firstPosition; i < currentRoute.size(); i++) {
+                int patient = currentRoute.get(i);
+                if(patient==iPatient){
+                    continue;
+                }
+                Patient p = allPatients[patient];
+                if (p.getRequired_caregivers().length > 1) {
+                    int routeIndex = getRouteIndexMethod(first, patientToRoutesMap.get(patient));
+                    int patientIndex = genes[routeIndex].indexOf(patient);
+                    if (routeEndPoint[routeIndex] == -1 || routeEndPoint[routeIndex] > patientIndex) {
+                        routeEndPoint[routeIndex] = patientIndex;
+                        int[] newRouteMove = {routeIndex};
+                        int[] newPositionMove = {patientIndex};
+                        removeAffectedPatientNew(iPatient,newRouteMove,newPositionMove, base, routeEndPoint);
+                    }
+                }
+            }
+        }
+    }
+
     private static int getRouteIndexMethod(int first, Set<Integer> routes) {
         if(routes==null) return -1; // Patient not found
         for(int route : routes){
