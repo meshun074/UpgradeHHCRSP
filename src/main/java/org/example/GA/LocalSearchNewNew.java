@@ -7,10 +7,9 @@ import org.example.Data.Required_Caregiver;
 import java.util.*;
 
 import static org.example.GA.EvaluationFunction.removeAffectedPatient;
-import static org.example.GA.EvaluationFunction.removeAffectedPatientNew;
 import static org.example.GA.GeneticAlgorithm.conflictCheck;
 
-public class LocalSearchNew implements Runnable {
+public class LocalSearchNewNew implements Runnable {
     @Override
     public void run() {
         ga.getLSChromosomes().put(r, search());
@@ -30,7 +29,7 @@ public class LocalSearchNew implements Runnable {
     private final double[] highestAndTotalTardiness;
     private final Set<Integer> track;
 
-    public LocalSearchNew(GeneticAlgorithm ga, Chromosome ch, int r, Random rand, int gen) {
+    public LocalSearchNewNew(GeneticAlgorithm ga, Chromosome ch, int r, Random rand, int gen) {
         this.ga = ga;
         this.ch = ch;
         this.rand = rand;
@@ -113,27 +112,14 @@ public class LocalSearchNew implements Runnable {
             cTemp.buildPatientRouteMap();
             Shift[] shifts = cTemp.getCaregiversRouteUp();
             if (p.getRequired_caregivers().length > 1) {
-                Set<CaregiverPair> caregiverPairs = p.getAllPossibleCaregiverCombinationsCrossover();
-                for (CaregiverPair caregiverPair : caregiverPairs) {
+                List<CaregiverPair> caregiverPairs = p.getAllPossibleCaregiverCombinations();
+                for (int x = 0; x < caregiverPairs.size(); x++) {
+                    CaregiverPair caregiverPair = caregiverPairs.get(x);
                     int first = caregiverPair.getFirst();
                     int second = caregiverPair.getSecond();
 //                    System.out.println("first: "+first+" second: "+second);
-                    int firstSize = c1Routes[first].size();
-                    int secondSize = c1Routes[second].size();
-                    c1Routes[first].add(0, patient);
-                    for (int m = 0; m <= firstSize; m++) {
-                        if(m>0){
-                            int otherPatient = c1Routes[first].get(m);
-                            c1Routes[first].set(m, patient);
-                            c1Routes[first].set(m-1, otherPatient);
-                        }
-                        c1Routes[second].add(0, patient);
-                        for (int n = 0; n <= secondSize; n++) {
-                            if(n>0){
-                                int otherPatient = c1Routes[second].get(n);
-                                c1Routes[second].set(n, patient);
-                                c1Routes[second].set(n - 1, otherPatient);
-                            }
+                    for (int m = 0; m <= c1Routes[first].size(); m++) {
+                        for (int n = 0; n <= c1Routes[second].size(); n++) {
 //                            System.out.println("cTemp: m "+m+" - n"+n+" - "+cTemp);
                             if (noEvaluationConflicts(c1Routes[first], c1Routes[second], m, n)) {
                                 double tempCost = calMoveCost(first, m, second, n, patient, cTemp, bestCost, shifts, isInvalid);
@@ -147,9 +133,7 @@ public class LocalSearchNew implements Runnable {
                                 }
                             }
                         }
-                        c1Routes[second].remove(Integer.valueOf(patient));
                     }
-                    c1Routes[first].remove(Integer.valueOf(patient));
                 }
 
                 if (bestCost != Double.MAX_VALUE) {
@@ -161,17 +145,11 @@ public class LocalSearchNew implements Runnable {
                     cTemp = swap(cTemp, isInvalid, patient, bestFirst, bestSecond, bestM, bestN);
                 }
             } else {
-                Set<CaregiverPair> caregiverPairs = p.getAllPossibleCaregiverCombinationsCrossover();
-                for (CaregiverPair caregiverPair : caregiverPairs) {
+                List<CaregiverPair> caregiverPairs = p.getAllPossibleCaregiverCombinations();
+                for (int x = 0; x < caregiverPairs.size(); x++) {
+                    CaregiverPair caregiverPair = caregiverPairs.get(x);
                     int first = caregiverPair.getFirst();
-                    int firstSize = c1Routes[first].size();
-                    c1Routes[first].add(0, patient);
-                    for (int k = 0; k <= firstSize; k++) {
-                        if(k>0){
-                            int otherPatient = c1Routes[first].get(k);
-                            c1Routes[first].set(k, patient);
-                            c1Routes[first].set(k - 1, otherPatient);
-                        }
+                    for (int k = 0; k <= c1Routes[first].size(); k++) {
                         double tempCost = calMoveCost(first, k, -1, -1, patient, cTemp, bestCost, shifts, isInvalid);
                         if (bestCost == Double.MAX_VALUE || bestCost - tempCost > 0.001 && bestCost != Double.POSITIVE_INFINITY && tempCost != Double.POSITIVE_INFINITY || tempCost <= bestCost && rand.nextBoolean()) {
                             bestCost = tempCost;
@@ -179,7 +157,6 @@ public class LocalSearchNew implements Runnable {
                             bestM = k;
                         }
                     }
-                    c1Routes[first].remove(Integer.valueOf(patient));
                 }
 
                 if (bestCost != Double.MAX_VALUE) {
@@ -198,7 +175,15 @@ public class LocalSearchNew implements Runnable {
         Arrays.fill(routeEndPoint, -1);
         if (isInvalid) {
             List<Integer>[] c1Routes = cTemp.getGenes();
+            c1Routes[first].add(m, patient);
+            if (second != -1) {
+                c1Routes[second].add(n, patient);
+            }
             Chromosome temp = new Chromosome(c1Routes, 0.0, true);
+            c1Routes[first].remove(Integer.valueOf(patient));
+            if (second != -1) {
+                c1Routes[second].remove(Integer.valueOf(patient));
+            }
             EvaluationFunction.Evaluate(temp);
             return temp.getFitness();
         }
@@ -217,7 +202,7 @@ public class LocalSearchNew implements Runnable {
             routeMove[1] = second;
             positionMove[1] = n;
         }
-        removeAffectedPatientNew(patient,routeMove, positionMove, cTemp, routeEndPoint);
+        removeAffectedPatient(routeMove, positionMove, cTemp, routeEndPoint);
 
         double totalTravelCost = 0.0;
         highestAndTotalTardiness[0] = 0;
@@ -247,6 +232,10 @@ public class LocalSearchNew implements Runnable {
 
         //Distance calculation
         List<Integer>[] genes = cTemp.getGenes();
+        genes[first].add(m, patient);
+        if (second != -1) {
+            genes[second].add(n, patient);
+        }
         for (int i = 0; i < routeEndPoint.length; i++) {
             List<Integer> route = genes[i];
             int routeEnd = routeEndPoint[i];
@@ -271,6 +260,10 @@ public class LocalSearchNew implements Runnable {
 
         double solutionCost = totalTravelCost + (1 / 3d * highestAndTotalTardiness[0]) + (1 / 3d * highestAndTotalTardiness[1]);
         if (solutionCost > bestCost) {
+            genes[first].remove(Integer.valueOf(patient));
+            if (second != -1) {
+                genes[second].remove(Integer.valueOf(patient));
+            }
             return solutionCost;
         }
 
@@ -287,12 +280,20 @@ public class LocalSearchNew implements Runnable {
                         solutionCost = patientIsAssigned(genes, i, route.get(j - 1), route.get(j), totalTravelCost, routesCurrentTime, highestAndTotalTardiness, track);
                     }
                     if (solutionCost == Double.POSITIVE_INFINITY || solutionCost > bestCost) {
+                        genes[first].remove(Integer.valueOf(patient));
+                        if (second != -1) {
+                            genes[second].remove(Integer.valueOf(patient));
+                        }
                         return solutionCost;
                     }
 
                     track.clear();
                 }
             }
+        }
+        genes[first].remove(Integer.valueOf(patient));
+        if (second != -1) {
+            genes[second].remove(Integer.valueOf(patient));
         }
         return solutionCost;
     }
