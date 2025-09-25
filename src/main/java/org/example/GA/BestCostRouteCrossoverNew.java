@@ -68,7 +68,7 @@ public class BestCostRouteCrossoverNew implements Runnable {
             c1Routes[i] = route;
         }
         List<Integer> route = new ArrayList<>(selectRoute);
-//        Collections.shuffle(route);
+        Collections.shuffle(route);
         Chromosome cTemp = new Chromosome(c1Routes, 0.0, false);
         EvaluationFunction.Evaluate(cTemp);
 //        System.out.println("removed: "+route);
